@@ -1,5 +1,6 @@
 import cv2
 from datetime import datetime
+from constants import SLICE_INDICES
 
 video = cv2.VideoCapture()
 # curl -o stream2.avi http://155.33.224.29:8080/4/video.cgi
@@ -16,9 +17,10 @@ while(video.isOpened()):
     if ret:
         fgmask = fgbg.apply(frame)
         fgmask = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, kernel)
-        #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        cropped_frame = frame[:SLICE_INDICES[0], SLICE_INDICES[1]:]
+
         
-        cv2.imshow('Marino', fgmask)
+        cv2.imshow('Marino', cropped_frame)
    
     if cv2.waitKey(1) & 0xFF == ord('q'):
             break
