@@ -23,7 +23,7 @@ while(video.isOpened()):
         cropped_frame = frame[:SLICE_INDICES[0], SLICE_INDICES[1]:]
 
         # detect people in the image
-        (rects, weights) = hog.detectMultiScale(cropped_frame, winStride = (8, 8), padding = (40, 40), scale = 1.02)
+        (rects, weights) = hog.detectMultiScale(cropped_frame, winStride = (8, 8), padding = (40, 40git), scale = 1.02)
 
         # draw the original bounding boxes
         if rects:
