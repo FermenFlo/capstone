@@ -20,6 +20,13 @@ ap.add_argument("-b", "--buffer", type=int, default=32,
 args = vars(ap.parse_args())
 
 delta_list = []
+h_list = []
+w_list = []
+
+min_contour_width = 50
+max_contour_width = 200
+min_contour_height = 120
+max_contour_height = 300
 
 # initialize the list of tracked points, the frame counter
 # and the coordinate deltas
@@ -79,24 +86,30 @@ while (video.isOpened()):
 		# dilate the thresholded image to fill in holes, then find contours
 		# on thresholded image
 		thresh = cv2.dilate(thresh, None, iterations=2)
-		cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
-								cv2.CHAIN_APPROX_SIMPLE)
+		cnts = cv2.findContours(thresh.copy(), cv2.RETR_TREE,
+								cv2.CHAIN_APPROX_NONE)
 		cnts = imutils.grab_contours(cnts)
 
+
 		# only proceed if at least one contour was found
-		if len(cnts) > 1:
+		if len(cnts) > 0:
 			# find the largest contour in the mask, then use
-			# it to compute the minimum enclosing rectangle and
-			# centroid
+			# it to compute the minimum enclosing rectangle and centroid
+			cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
+			cnts = cnts[0:1]
+			for c in cnts:
+				(x, y, w, h) = cv2.boundingRect(c)
+				#contour_valid = (w >= min_contour_width and w <= max_contour_width) and (h >= min_contour_height and h<= max_contour_height)
+				#contour_valid = (h > w) and (w < max_contour_width)
+				contour_valid = ((cv2.contourArea(c)>1000) and (h > w) and (w< max_contour_width))
 
-			c = max(cnts, key=cv2.contourArea)
-			((x, y), radius) = cv2.minEnclosingCircle(c)
-			(x, y, w, h) = cv2.boundingRect(c)
-			M = cv2.moments(c)
-			center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+				if not contour_valid:
+					continue
 
-			# only proceed if the radius meets a minimum size
-			if radius > 10:
+				M = cv2.moments(c)
+				center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+
+				# only proceed if the radius meets a minimum size
 				# draw the rectangle and centroid on the frame,
 				# then update the list of tracked points
 				cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
@@ -158,6 +171,7 @@ while (video.isOpened()):
 
 		# show the frame to our screen and increment the frame counter
 		cv2.imshow("Frame", frame)
+		cv2.imshow("Thresh", thresh)
 		key = cv2.waitKey(1) & 0xFF
 		counter += 1
 
@@ -167,8 +181,10 @@ while (video.isOpened()):
 
 
 
-print(delta_list)
-print(len(delta_list))
+#print(delta_list)
+#print(len(delta_list))
+print(h_list)
+print(w_list)
 
 
 # if we are not using a video file, stop the camera video stream
