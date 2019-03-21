@@ -125,7 +125,7 @@ class Stream:
             if key == ord("q"):
                 break
                 
-                
+
 class Contour:
     
     def __init__(self, c, frame_number):
@@ -156,15 +156,28 @@ class Contour:
         self.neighbor_dist = dist
         self.neighbor = c
             
-    
+
+# get closest neighbor via time and distance
+# if contours are close enough, turn them into one contour
+
     def merge_contours(self, contour):
         '''Given another contour, merge them together sensibly
            and return the newly formed contour'''
-        pass
-        
+        c_dist = math.hypot(self.center[0] - contour.center[0], self.center[1] - contour.center[1])
+        too_close_dist = 5
+        if c_dist < too_close_dist:
+            #c = cv2.convexHull(self.contour)
+            TL = (min(self.TL[0], contour.TL[0]), min(self.TL[1], contour.TL[1]))
+            TR = (max(self.TL[0], contour.TL[0]), min(self.TL[1], contour.TL[1]))
+            BL = (min(self.TL[0], contour.TL[0]), max(self.TL[1], contour.TL[1]))
+            BR = (max(self.TL[0], contour.TL[0]), max(self.TL[1], contour.TL[1]))
+            #cv2.rectangle(frame, TL, BR)
+
 
             
 if __name__ == '__main__':
     
     stream = Stream(alterations = ['gray', 'diff'])
     stream.read_stream()
+
+
