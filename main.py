@@ -33,8 +33,10 @@ class Stream:
         frame = cv2.imdecode(np.fromstring(jpg, dtype = np.uint8), cv2.IMREAD_COLOR)
 
         if self.first_frame is None:
+            self.first_frame = frame
+            
             for alteration in self.base_alterations:
-                self.first_frame = self._alter_frame(frame, alteration)
+                self.first_frame = self._alter_frame(self.first_frame, alteration)
                     
         return frame
         
@@ -81,7 +83,7 @@ class Stream:
                 return frame
         
         elif alteration == 'thresh':
-            return cv2.threshold(frame, 125, 255, cv2.THRESH_BINARY)[1]
+            return cv2.threshold(frame, 25, 255, cv2.THRESH_BINARY)[1]
         
         elif alteration == 'hsv':
             return cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
