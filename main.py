@@ -68,7 +68,7 @@ class Stream:
             return cv2.GaussianBlur(frame, (11, 11), 0)
         
         elif alteration == 'dilate':
-            dilation_kernel = np.ones((5,1)) # use a large dilation kernel
+            dilation_kernel = np.ones((5,5)) # use a large dilation kernel
             return cv2.dilate(frame, dilation_kernel, iterations = 1) # dilate
         
         elif alteration == 'erode':
@@ -144,6 +144,7 @@ class Contour:
         self.BR = (self.x + self.h, self.y + self.w)
         self.size = cv2.contourArea(c)
         self.points = [self.center]
+        self.merge_contour = None
         
         
     def get_closest_neighbor(self, contours):
@@ -158,9 +159,8 @@ class Contour:
 
             
 
-# get closest neighbor via time and distance
+# get closest neighbor via time, distance, and direction
 # if contours are close enough, turn them into one contour
-
     def merge_contours(self, contour):
         '''Given another contour, merge them together sensibly
            and return the newly formed contour'''
