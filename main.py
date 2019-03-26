@@ -6,7 +6,8 @@ import cv2
 import imutils
 import time
 import urllib.request
-import math 
+import math
+
 
 
 class Stream:
@@ -18,6 +19,8 @@ class Stream:
         self.first_frame = None
         self.frame_number = 0
         self.contours = []
+        self.contour_cap = 50
+        self.max_contour_age = 200
         
     def _grab_next_frame(self):
         while True:
@@ -94,6 +97,7 @@ class Stream:
         new_contours = imutils.grab_contours(new_contours)
         
         self.contours += [Contour(c, self.frame_number) for c in new_contours]
+        self.contours = self.contours[:self.contour_cap]
         
         
     def draw_contours(self):
@@ -130,9 +134,10 @@ class Stream:
 
 class Contour:
     
-    def __init__(self, c, frame_number):
+    def __init__(self, c, stream):
         self.contour = c
-        self.frame_number = frame_number
+        self.stream = stream
+        self.initial_frame_number = stream.frame_number
         self.age = 0
         self.x, self.y, self.w, self.h = cv2.boundingRect(c)
         self.moment = cv2.moments(c)
@@ -146,6 +151,14 @@ class Contour:
         self.points = [self.center]
         self.merge_contour = None
         
+    def _get_age(self):
+        self._age = self.stream.frame_number - self.initial_frame_number
+        return self._age
+    
+    def set_age(self, value):
+        self._age = age
+        
+    age = property(get_age, set_age) # override self.age with a property
         
     def get_closest_neighbor(self, contours):
         dist = np.inf
@@ -157,10 +170,9 @@ class Contour:
             if c_dist <= dist:
                 self.neighbor_dist , self.neighbor = c_dist, c
 
-            
 
-# get closest neighbor via time, distance, and direction
-# if contours are close enough, turn them into one contour
+    # get closest neighbor via time, distance, and direction
+    # if contours are close enough, turn them into one contour
     def merge_contours(self, contour):
         '''Given another contour, merge them together sensibly
            and return the newly formed contour'''
@@ -171,6 +183,12 @@ class Contour:
             TR = (max(self.TL[0], contour.TL[0]), min(self.TL[1], contour.TL[1]))
             BL = (min(self.TL[0], contour.TL[0]), max(self.TL[1], contour.TL[1]))
             BR = (max(self.TL[0], contour.TL[0]), max(self.TL[1], contour.TL[1]))
+            
+            
+    def should_delete(self):
+        if self.age > self.stream.max_contour_age
+        
+            
 
 
             
