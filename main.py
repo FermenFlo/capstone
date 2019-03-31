@@ -135,9 +135,12 @@ class Stream:
 class Contour:
     
     def __init__(self, c, stream):
+        
+        # Meta attributes
         self.contour = c
         self.stream = stream
-        self.initial_frame_number = stream.frame_number
+        
+        # Intra-frame attributes
         self.age = 0
         self.x, self.y, self.w, self.h = cv2.boundingRect(c)
         self.moment = cv2.moments(c)
@@ -148,6 +151,9 @@ class Contour:
         self.BL = (self.x + self.h, self.y)
         self.BR = (self.x + self.h, self.y + self.w)
         self.size = cv2.contourArea(c)
+        
+        # Inter-frame attributes
+        self.initial_frame_number = stream.frame_number
         self.points = [self.center]
         self.merge_contour = None
         
@@ -185,12 +191,15 @@ class Contour:
             BR = (max(self.TL[0], contour.TL[0]), max(self.TL[1], contour.TL[1]))
             
             
-    def should_delete(self):
-        if self.age > self.stream.max_contour_age
-        
+    def delete(self):
+        if self.age > self.stream.max_contour_age: # If this contour too old, delete it
+            print('Contour_{}: deleting self for being too old'.format(id(self)))
+            self.stream.contours.remove(self)
             
-
-
+        if self.merge_contour: # If this contour is going to be merged, merge it and then delete it
+            print('Contour_{}: deleting self for merging'.format(id(self)))
+            self.merge_with(self.merge_contour)
+            self.stream.contours.remove(self)
             
 if __name__ == '__main__':
     
