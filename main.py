@@ -7,6 +7,7 @@ import imutils
 import time
 import urllib.request
 import math
+from scipy.optimize import curve_fit
 
 
 
@@ -129,8 +130,9 @@ class Stream:
             if key == ord("q"):
                 break
                 
-                
 
+def fit_func(x, a, b):
+    return a * x + b
 
 class Contour:
     
@@ -155,6 +157,8 @@ class Contour:
         # Inter-frame attributes
         self.initial_frame_number = stream.frame_number
         self.points = [self.center]
+        self.points.append(self.center)
+        self.direction = ((curve_fit(fit_func, self.points[:][0], self.points[:][1]))[0][0])
         self.merge_contour = None
         
     def _get_age(self):
@@ -179,16 +183,25 @@ class Contour:
 
     # get closest neighbor via time, distance, and direction
     # if contours are close enough, turn them into one contour
-    def merge_contours(self, contour):
+    def merge_with(self, contour):
         '''Given another contour, merge them together sensibly
            and return the newly formed contour'''
-        c_dist = math.hypot(self.center[0] - contour.center[0], self.center[1] - contour.center[1])
-        too_close_dist = 0
-        if c_dist < too_close_dist:
+        dist_tresh = 0
+        age_thresh = 0
+        dir_thresh = 0
+        dist_diff = math.hypot(self.center[0] - contour.center[0], self.center[1] - contour.center[1])
+        age_diff = self.age - contour.age
+        dir_diff = self.direction - contour.direction
+
+        if c_dist < dist_tresh and age_diff < age_thresh and dir_diff < dir_thresh:
             TL = (min(self.TL[0], contour.TL[0]), min(self.TL[1], contour.TL[1]))
             TR = (max(self.TL[0], contour.TL[0]), min(self.TL[1], contour.TL[1]))
             BL = (min(self.TL[0], contour.TL[0]), max(self.TL[1], contour.TL[1]))
             BR = (max(self.TL[0], contour.TL[0]), max(self.TL[1], contour.TL[1]))
+
+            self.points = [self.center]
+            self.points.append(self.center)
+            self.direction = ((curve_fit(fit_func, self.points[:][0], self.points[:][1]))[0][0])
             
             
     def delete(self):
