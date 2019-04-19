@@ -23,6 +23,8 @@ class Stream:
         self.contours = []
         self.contour_cap = 20
         self.max_contour_age = 200
+        self.num_north_exits = 0
+        self.num_south_exits = 0
         
     def _grab_next_frame(self):
         while True:
@@ -101,18 +103,31 @@ class Stream:
         
         self.contours = [Contour(c, self) for c in new_contours]
         self.contours = sorted(self.contours, key = lambda x: -x.size)[:self.contour_cap]
-        
-        self._optimize_f1()
-        
         self.contours = [c for c in self.contours if c.validate()]
         self.contours = [c.inherit() for c in self.contours]
+
         
+    def count_exits(self):
+        dir_upper = 2
+        dir_lower = .6
+        
+        if len(self.contours) < len(self.old_contours):
+            exiting_counts = [1 if c.points[-1][1] < 50 else -1 if c.points[-1][1] > 370 else 0 
+                              for c in self.old_contours if abs(c.direction) < dir_upper and 
+                                                            abs(c.direction) > dir_lower and
+                                                            len(c.points) >= 3]
             
-        print([c.direction for c in self.contours])
+            self.num_north_exits += 1 if exiting_counts.count(1) else 0
+            self.num_south_exits += 1 if exiting_counts.count(-1) else 0
+            
+            
+    def contour_overlap(self, c1, c2):
+        dx = min(c1.x + c1.w, c2.x + c2.w) - max(c1.x, c2.x)
+        dy = min(c1.y + c1.h, c2.y + c2.h) - max(c1.y, c2.y)
         
-        
-    def _optimize_f1(self):
-        pass
+        return dx*dy
+            
+            
         
         
     def draw_contours(self):
@@ -136,9 +151,12 @@ class Stream:
 
 
             self._update_contours()
+            self.count_exits()
             self.draw_contours()
+            cv2.putText(self.clean_frame, "north: {}, south: {}".format(self.num_north_exits, self.num_south_exits),
+            (10, self.clean_frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX,
+            1, (0, 0, 255), 1)
             cv2.imshow("Frame", self.clean_frame)
-            cv2.imshow("Altered Frame", self.altered_frame)
             
             # if the 'q' key is pressed, stop the loopa
             key = cv2.waitKey(1) & 0xFF
@@ -178,8 +196,11 @@ class Contour:
         self.points = [self.center]
         self.direction = np.polyfit([x[0] for x in self.points], [x[1] for x in self.points], 1)[0] \
                              if len(set(self.points)) > 1 else 0
-        print(len(self.points))
         self.merge_contour = None
+    
+    def recalculate_direction(self):
+        self.direction = np.polyfit([x[0] for x in self.points], [x[1] for x in self.points], 1)[0] \
+                             if len(set(self.points)) > 1 else 0
     
     def _get_precision(self):
         TP = sum([1 for lst in self.altered_area for x in lst if x])
@@ -213,7 +234,7 @@ class Contour:
     def inherit(self):
         '''This method handles inheriting information from past contours.
            For instance, this will handle inheriting past center points from the previous frame'''
-        dist_thresh = 50
+        dist_thresh = 100 # 50
     
         old_contours = self.stream.old_contours
         parent_contour = None
@@ -234,11 +255,13 @@ class Contour:
             new_contour.initial_frame_number = parent_contour.initial_frame_number
             new_contour.points = parent_contour.points + self.points
             new_contour.age = parent_contour.age + self.age
+            new_contour.recalculate_direction()
             
             return new_contour
             
         else:
-            return self
+            self.recalculate_direction()
+            return self # Don't return a new contour
             
         
 
@@ -291,7 +314,6 @@ class Contour:
     def delete(self):
         old_len = len(self.stream.contours)
         self.stream.contours.remove(self)
-        #print('removed {}_{}'.format(id(self), self.size))
 
             
             
