@@ -105,7 +105,7 @@ qtconsole==4.3.1
 rake-nltk==1.0.3
 regex==2017.4.5
 requests==2.18.4
-rsa==3.4.2
+rsa==4.1
 s3fs==0.1.5
 s3transfer==0.1.13
 scattertext==0.0.2.27.1
