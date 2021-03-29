@@ -92,7 +92,7 @@ py==1.5.3
 pyasn1==0.4.4
 pydotplus==2.0.2
 pygame==1.9.4
-Pygments==2.2.0
+Pygments==2.7.4
 Pympler==0.5
 pyparsing==2.2.0
 pytesseract==0.2.2
