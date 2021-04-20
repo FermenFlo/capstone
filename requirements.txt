@@ -88,7 +88,7 @@ preshed==1.0.0
 prompt-toolkit==1.0.15
 protobuf==3.6.1
 ptyprocess==0.5.2
-py==1.5.3
+py==1.10.0
 pyasn1==0.4.4
 pydotplus==2.0.2
 pygame==1.9.4
