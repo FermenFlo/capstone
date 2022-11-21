@@ -120,7 +120,7 @@ spacy==2.0.10
 stevedore==1.28.0
 sympy==1.2
 tensorboard==1.10.0
-tensorflow==1.10.1
+tensorflow==2.9.3
 termcolor==1.1.0
 terminado==0.8.1
 tesseract==0.1.3
